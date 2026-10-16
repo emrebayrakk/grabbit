@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Grabbit Bridge"
+  },
+  "extDescription": {
+    "message": "Sends browser downloads, videos and images to the Grabbit desktop app."
+  }
+}

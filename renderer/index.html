@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; script-src 'self'" />
+  <title>Grabbit</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <img src="../assets/icon.png" alt="" width="28" height="28" />
+        <span>Grabbit</span>
+      </div>
+      <button class="btn primary new-btn" id="newBtn" data-i18n-title="nav.newTitle">
+        <span data-icon="plus"></span> <span data-i18n="nav.new"></span>
+      </button>
+      <nav class="nav" id="nav">
+        <div class="nav-title" data-i18n="nav.status"></div>
+        <button class="nav-item" data-filter="all"><span data-icon="layers"></span><span data-i18n="nav.all"></span><span class="count"></span></button>
+        <button class="nav-item" data-filter="active"><span data-icon="download"></span><span data-i18n="nav.active"></span><span class="count"></span></button>
+        <button class="nav-item" data-filter="completed"><span data-icon="check"></span><span data-i18n="nav.completed"></span><span class="count"></span></button>
+        <button class="nav-item" data-filter="paused"><span data-icon="pause"></span><span data-i18n="nav.paused"></span><span class="count"></span></button>
+        <button class="nav-item" data-filter="error"><span data-icon="alert"></span><span data-i18n="nav.error"></span><span class="count"></span></button>
+        <div class="nav-title" data-i18n="nav.categories"></div>
+        <div id="catNav"></div>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="bridge" id="bridgeState" data-i18n-title="bridge.title">
+          <span class="dot"></span><span class="label" data-i18n="bridge.label"></span>
+        </div>
+        <button class="btn ghost" id="settingsBtn"><span data-icon="settings"></span> <span data-i18n="settings.title"></span></button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="toolbar">
+        <div class="tool-group">
+          <button class="btn tool" id="startBtn" data-i18n-title="tb.startTitle"><span data-icon="play"></span><span data-i18n="act.start"></span></button>
+          <button class="btn tool" id="pauseBtn" data-i18n-title="tb.pauseTitle"><span data-icon="pause"></span><span data-i18n="act.pause"></span></button>
+          <button class="btn tool" id="removeBtn" data-i18n-title="tb.removeTitle"><span data-icon="trash"></span><span data-i18n="act.remove"></span></button>
+        </div>
+        <div class="tool-sep"></div>
+        <div class="tool-group">
+          <button class="btn tool" id="startAllBtn" data-i18n-title="tb.startAllTitle"><span data-icon="playAll"></span><span data-i18n="tb.startAll"></span></button>
+          <button class="btn tool" id="pauseAllBtn" data-i18n-title="tb.pauseAllTitle"><span data-icon="pauseAll"></span><span data-i18n="tb.pauseAll"></span></button>
+        </div>
+        <div class="spacer"></div>
+        <label class="search">
+          <span data-icon="search"></span>
+          <input id="search" type="search" data-i18n-placeholder="tb.search" autocomplete="off" />
+        </label>
+      </header>
+
+      <div class="banner" id="pairBanner" hidden>
+        <span data-icon="globe"></span>
+        <div data-i18n-html="banner.html"></div>
+        <button class="btn small primary" id="pairBtn" data-i18n="banner.pair"></button>
+        <button class="icon-btn" id="pairClose" data-i18n-title="common.hide"><span data-icon="x"></span></button>
+      </div>
+      <div class="list-wrap">
+        <div class="list-header" id="listHeader">
+          <button data-sort="filename" data-i18n="col.name"></button>
+          <button data-sort="size" class="num" data-i18n="col.size"></button>
+          <button data-sort="progress" data-i18n="col.progress"></button>
+          <button data-sort="speed" class="num" data-i18n="col.speed"></button>
+          <button data-sort="eta" class="num" data-i18n="col.eta"></button>
+          <button data-sort="createdAt" class="num" data-i18n="col.added"></button>
+        </div>
+        <div class="list" id="list" tabindex="0"></div>
+        <div class="empty" id="empty" hidden>
+          <div class="empty-art"><span data-icon="downloadCloud"></span></div>
+          <h2 id="emptyTitle"></h2>
+          <p id="emptyText"></p>
+          <button class="btn primary" id="emptyAddBtn"><span data-icon="plus"></span> <span data-i18n="nav.new"></span></button>
+        </div>
+      </div>
+
+      <section class="details" id="details" hidden>
+        <div class="details-head">
+          <div class="details-title">
+            <span class="file-badge" id="dIcon"></span>
+            <div>
+              <div class="d-name" id="dName"></div>
+              <div class="d-sub" id="dSub"></div>
+            </div>
+          </div>
+          <div class="details-actions" id="dActions"></div>
+          <button class="icon-btn" id="dClose" data-i18n-title="details.closeTitle"><span data-icon="x"></span></button>
+        </div>
+        <div class="details-body">
+          <div class="seg-block">
+            <div class="seg-legend">
+              <span data-i18n="details.connMap"></span>
+              <span id="dConn"></span>
+            </div>
+            <canvas id="segCanvas" height="28"></canvas>
+            <div class="spark-wrap">
+              <canvas id="sparkCanvas" height="56"></canvas>
+              <div class="spark-label" id="sparkLabel"></div>
+            </div>
+          </div>
+          <dl class="info-grid" id="dInfo"></dl>
+          <div class="side-block">
+            <div class="field-row">
+              <label for="dLimit" data-i18n="details.limit"></label>
+              <select id="dLimit"></select>
+            </div>
+            <div class="hash-box" id="hashBox">
+              <div class="field-row">
+                <label for="hashAlgo" data-i18n="details.verify"></label>
+                <select id="hashAlgo">
+                  <option value="sha256">SHA-256</option>
+                  <option value="sha1">SHA-1</option>
+                  <option value="md5">MD5</option>
+                  <option value="sha512">SHA-512</option>
+                </select>
+                <button class="btn small" id="hashBtn" data-i18n="details.compute"></button>
+              </div>
+              <input id="hashExpected" class="mono" data-i18n-placeholder="details.expectedPh" />
+              <div class="hash-result mono" id="hashResult"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer class="statusbar">
+        <span class="sb-speed" id="sbSpeed"><span data-icon="download"></span><b>0 KB/s</b></span>
+        <span class="sb-item" id="sbActive"></span>
+        <div class="spacer"></div>
+        <label class="sb-item sb-select" data-i18n-title="sb.limitTitle">
+          <span data-icon="gauge"></span>
+          <select id="sbLimit"></select>
+        </label>
+        <label class="sb-item sb-select" data-i18n-title="sb.concTitle">
+          <span data-icon="layers"></span>
+          <select id="sbConcurrent"></select>
+        </label>
+      </footer>
+    </main>
+  </div>
+
+  <!-- Yeni indirme -->
+  <div class="modal" id="addModal" hidden>
+    <div class="dialog wide" role="dialog" aria-labelledby="addTitle">
+      <div class="dialog-head">
+        <h2 id="addTitle" data-i18n="nav.new"></h2>
+        <button class="icon-btn" data-close data-i18n-title="common.close"><span data-icon="x"></span></button>
+      </div>
+      <div class="dialog-body">
+        <label class="field">
+          <span><span data-i18n="add.links"></span> <small data-i18n="add.linksHint"></small></span>
+          <textarea id="addUrls" rows="3" spellcheck="false" data-i18n-placeholder="add.urlPh"></textarea>
+        </label>
+        <div class="probe" id="probeCard" hidden></div>
+        <div class="grid-2">
+          <label class="field">
+            <span data-i18n="add.folder"></span>
+            <div class="input-btn">
+              <input id="addDir" readonly />
+              <button class="btn small" id="addDirBtn" data-i18n="common.change"></button>
+              <button class="btn small ghost" id="addDirReset" data-i18n-title="add.autoReset" hidden><span data-icon="x"></span></button>
+            </div>
+          </label>
+          <label class="field">
+            <span><span data-i18n="add.connections"></span> <b id="addConnVal"></b></span>
+            <input id="addConn" type="range" min="1" max="32" step="1" />
+          </label>
+        </div>
+        <details class="advanced">
+          <summary data-i18n="add.advanced"></summary>
+          <div class="grid-2">
+            <label class="field">
+              <span data-i18n="add.limit"></span>
+              <input id="addLimit" type="number" min="0" step="64" value="0" />
+            </label>
+            <label class="field">
+              <span data-i18n="add.referer"></span>
+              <input id="addReferer" placeholder="https://…" spellcheck="false" />
+            </label>
+          </div>
+          <div class="grid-2">
+            <label class="field">
+              <span data-i18n="add.hashAlgo"></span>
+              <select id="addHashAlgo">
+                <option value="sha256">SHA-256</option>
+                <option value="sha1">SHA-1</option>
+                <option value="md5">MD5</option>
+                <option value="sha512">SHA-512</option>
+              </select>
+            </label>
+            <label class="field">
+              <span data-i18n="add.hash"></span>
+              <input id="addHash" class="mono" spellcheck="false" data-i18n-placeholder="add.hashPh" />
+            </label>
+          </div>
+          <div class="cookie-note" id="addCookieNote" hidden><span data-icon="lock"></span> <span data-i18n="add.cookieNote"></span></div>
+        </details>
+      </div>
+      <div class="dialog-foot">
+        <span class="hint" id="addHint"></span>
+        <button class="btn" data-close data-i18n="common.cancel"></button>
+        <button class="btn" id="addLaterBtn" data-i18n="add.later"></button>
+        <button class="btn primary" id="addNowBtn"><span data-icon="download"></span> <span data-i18n="common.download"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Ayarlar -->
+  <div class="modal" id="settingsModal" hidden>
+    <div class="dialog wide" role="dialog" aria-labelledby="settingsTitle">
+      <div class="dialog-head">
+        <h2 id="settingsTitle" data-i18n="settings.title"></h2>
+        <button class="icon-btn" data-close data-i18n-title="common.close"><span data-icon="x"></span></button>
+      </div>
+      <div class="settings">
+        <div class="tabs" id="settingsTabs">
+          <button data-tab="general" class="active"><span data-icon="settings"></span><span data-i18n="settings.tabGeneral"></span></button>
+          <button data-tab="network"><span data-icon="zap"></span><span data-i18n="settings.tabNetwork"></span></button>
+          <button data-tab="capture"><span data-icon="globe"></span><span data-i18n="settings.tabCapture"></span></button>
+          <button data-tab="schedule"><span data-icon="clock"></span><span data-i18n="settings.tabSchedule"></span></button>
+        </div>
+        <div class="tab-panels">
+          <section data-panel="general">
+            <div class="grid-2">
+              <label class="field">
+                <span data-i18n="settings.language"></span>
+                <select data-setting="language" id="languageSelect"></select>
+              </label>
+              <label class="field">
+                <span data-i18n="settings.theme"></span>
+                <select data-setting="theme">
+                  <option value="system" data-i18n="theme.system"></option>
+                  <option value="light" data-i18n="theme.light"></option>
+                  <option value="dark" data-i18n="theme.dark"></option>
+                </select>
+              </label>
+            </div>
+            <label class="field">
+              <span data-i18n="settings.downloadDir"></span>
+              <div class="input-btn">
+                <input data-setting="downloadDir" readonly />
+                <button class="btn small" id="pickDownloadDir" data-i18n="common.change"></button>
+                <button class="btn small ghost" id="openDownloadDir" data-i18n-title="settings.openFolder"><span data-icon="folder"></span></button>
+              </div>
+            </label>
+            <label class="check"><input type="checkbox" data-setting="categorize" /> <span data-i18n="settings.categorize"></span> <small data-i18n="settings.categorizeHint"></small></label>
+            <label class="field narrow">
+              <span data-i18n="settings.mediaQuality"></span>
+              <select data-setting="mediaQuality">
+                <option value="best" data-i18n="q.best"></option>
+                <option value="2160" data-i18n="q.2160"></option>
+                <option value="1440">1440p</option>
+                <option value="1080">1080p</option>
+                <option value="720">720p</option>
+                <option value="480">480p</option>
+                <option value="360">360p</option>
+                <option value="audio" data-i18n="q.audio"></option>
+              </select>
+            </label>
+            <label class="check"><input type="checkbox" data-setting="fullSizeImages" /> <span data-i18n="settings.fullSize"></span> <small data-i18n="settings.fullSizeHint"></small></label>
+            <label class="check"><input type="checkbox" data-setting="minimizeToTray" /> <span data-i18n="settings.tray"></span></label>
+            <label class="check"><input type="checkbox" data-setting="resumeOnStart" /> <span data-i18n="settings.resume"></span></label>
+            <label class="check"><input type="checkbox" data-setting="notifications" /> <span data-i18n="settings.notify"></span></label>
+          </section>
+          <section data-panel="network" hidden>
+            <div class="grid-2">
+              <label class="field">
+                <span data-i18n="net.concurrent"></span>
+                <input type="number" min="1" max="20" data-setting="maxConcurrent" />
+              </label>
+              <label class="field">
+                <span data-i18n="net.connections"></span>
+                <input type="number" min="1" max="32" data-setting="connections" />
+              </label>
+              <label class="field">
+                <span data-i18n="net.speedLimit"></span>
+                <input type="number" min="0" step="64" data-setting="speedLimit" />
+              </label>
+              <label class="field">
+                <span data-i18n="net.retries"></span>
+                <input type="number" min="0" max="50" data-setting="retries" />
+              </label>
+            </div>
+            <p class="note" data-i18n="net.note"></p>
+          </section>
+          <section data-panel="capture" hidden>
+            <div class="engine-row" id="engineRow">
+              <span data-icon="video"></span>
+              <div class="b-info"><b data-i18n="cap.engine"></b><small id="engineText"></small></div>
+              <button class="btn small primary" id="engineBtn" data-i18n="cap.install"></button>
+            </div>
+            <div class="field"><span data-i18n="cap.browsers"></span></div>
+            <div class="browser-list" id="browserList"><div class="note" data-i18n="cap.searching"></div></div>
+            <div class="setup-steps" id="setupSteps" hidden>
+              <b id="setupTitle"></b>
+              <p class="note" id="setupStore" hidden data-i18n-html="cap.storeNote"></p>
+              <ol id="setupManual">
+                <li data-i18n-html="cap.step1"></li>
+                <li data-i18n-html="cap.step2"></li>
+                <li data-i18n-html="cap.step3"></li>
+              </ol>
+              <p class="note" data-i18n="cap.setupNote"></p>
+            </div>
+            <label class="check"><input type="checkbox" data-setting="bridgeEnabled" /> <span data-i18n="cap.bridgeEnabled"></span></label>
+            <label class="check"><input type="checkbox" data-setting="askOnBridge" /> <span data-i18n="cap.askOnBridge"></span></label>
+            <label class="check"><input type="checkbox" data-setting="showProgressWindow" /> <span data-i18n="cap.progressWindow"></span></label>
+            <label class="check"><input type="checkbox" data-setting="clipboardWatch" /> <span data-i18n="cap.clipboard"></span></label>
+            <div class="grid-2">
+              <label class="field">
+                <span data-i18n="cap.port"></span>
+                <input type="number" min="1024" max="65535" data-setting="bridgePort" />
+              </label>
+              <div class="field">
+                <span data-i18n="cap.extFiles"></span>
+                <button class="btn" id="openExtBtn"><span data-icon="folder"></span> <span data-i18n="cap.openExt"></span></button>
+              </div>
+            </div>
+            <p class="note" data-i18n="cap.extNote"></p>
+          </section>
+          <section data-panel="schedule" hidden>
+            <label class="check"><input type="checkbox" data-setting="schedule.enabled" /> <span data-i18n="sch.enable"></span></label>
+            <div class="grid-2">
+              <label class="field">
+                <span data-i18n="sch.start"></span>
+                <input type="time" data-setting="schedule.start" />
+              </label>
+              <label class="field">
+                <span><span data-i18n="sch.stop"></span> <small data-i18n="sch.optional"></small></span>
+                <input type="time" data-setting="schedule.stop" />
+              </label>
+            </div>
+            <p class="note" data-i18n="sch.note"></p>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Onay -->
+  <div class="modal" id="confirmModal" hidden>
+    <div class="dialog" role="alertdialog" aria-labelledby="confirmTitle">
+      <div class="dialog-head"><h2 id="confirmTitle"></h2></div>
+      <div class="dialog-body">
+        <p id="confirmText"></p>
+        <label class="check" id="confirmCheckWrap"><input type="checkbox" id="confirmCheck" /> <span id="confirmCheckLabel"></span></label>
+      </div>
+      <div class="dialog-foot">
+        <span class="hint"></span>
+        <button class="btn" data-close data-i18n="confirm.cancel"></button>
+        <button class="btn danger" id="confirmOk"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ctxmenu" id="ctxmenu" hidden></div>
+  <div class="toasts" id="toasts"></div>
+  <div class="drop-overlay" id="dropOverlay" hidden>
+    <div><span data-icon="downloadCloud"></span><p data-i18n="drop.text"></p></div>
+  </div>
+
+  <script src="../i18n/locales/en.js"></script>
+  <script src="../i18n/locales/tr.js"></script>
+  <script src="../i18n/locales/de.js"></script>
+  <script src="../i18n/locales/es.js"></script>
+  <script src="../i18n/locales/fr.js"></script>
+  <script src="../i18n/locales/ru.js"></script>
+  <script src="../i18n/i18n.js"></script>
+  <script src="i18n-dom.js"></script>
+  <script src="icons.js"></script>
+  <script src="format.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

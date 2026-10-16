@@ -1,0 +1,53 @@
+{
+  "name": "grabbit",
+  "productName": "Grabbit",
+  "version": "2.0.2",
+  "description": "Fast, multi-connection download manager with video site support, browser integration and 6 languages",
+  "main": "src/main.js",
+  "author": "Grabbit",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "test": "node test/engine.test.js && node scripts/check-i18n.js",
+    "icon": "node scripts/make-icon.js",
+    "dist": "electron-builder --win",
+    "pack-extension": "node scripts/pack-extension.js",
+    "check-i18n": "node scripts/check-i18n.js"
+  },
+  "build": {
+    "appId": "com.turboindir.app",
+    "productName": "Grabbit",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "renderer/**/*",
+      "i18n/**/*",
+      "assets/**/*",
+      "extension/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "extension",
+        "to": "extension"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.png",
+      "executableName": "Grabbit",
+      "artifactName": "Grabbit-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Grabbit"
+    }
+  },
+  "devDependencies": {
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3"
+  }
+}

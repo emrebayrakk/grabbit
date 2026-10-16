@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <style>
+    :root { --bg: #fff; --bg2: #f3f5f8; --text: #171a21; --muted: #6b7280; --border: #e1e4ea; --accent: #3b63f0; --accent2: #6d4ae8; --soft: #e8edfe; --ok: #1a9c5a; --err: #d6363f; color-scheme: light; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1b1e24; --bg2: #23272f; --text: #eceef2; --muted: #9aa3b2; --border: #2f343e; --accent: #6b8cff; --accent2: #8b6cf6; --soft: #2a3350; --ok: #3ccf7f; --err: #ff6b70; color-scheme: dark; }
+    }
+    body { margin: 0; width: 340px; background: var(--bg); color: var(--text); font: 13px/1.45 "Segoe UI", system-ui, sans-serif; }
+    header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
+    header img { width: 26px; height: 26px; border-radius: 7px; }
+    header b { font-size: 14px; display: block; }
+    .status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .on .dot { background: var(--ok); }
+    .off .dot { background: var(--err); }
+    section { padding: 10px 14px; border-bottom: 1px solid var(--border); }
+    h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    .media { display: flex; flex-direction: column; gap: 6px; max-height: 240px; overflow-y: auto; }
+    .m { display: flex; align-items: center; gap: 10px; padding: 8px; border-radius: 8px; background: var(--bg2); }
+    .m .tag { flex: none; font-size: 10.5px; font-weight: 700; padding: 2px 6px; border-radius: 5px; background: var(--soft); color: var(--accent); }
+    .m .info { flex: 1; min-width: 0; }
+    .m .info b { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+    .m .info small { color: var(--muted); }
+    button.dl { flex: none; border: 0; border-radius: 7px; padding: 6px 10px; color: #fff; font: 600 12px "Segoe UI", sans-serif; background: linear-gradient(135deg, var(--accent), var(--accent2)); cursor: pointer; }
+    .empty { color: var(--muted); font-size: 12px; }
+    label { display: flex; align-items: center; gap: 9px; margin: 6px 0; }
+    input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; margin: 0; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--muted); font-size: 12px; margin: 6px 0; }
+    input[type=number] { width: 72px; padding: 4px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+    footer { padding: 8px 14px 12px; color: var(--muted); font-size: 11.5px; }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="icon32.png" alt="" />
+    <div>
+      <b>Grabbit</b>
+      <div class="status" id="status"><span class="dot"></span><span id="statusText" data-t="checking"></span></div>
+    </div>
+  </header>
+  <section>
+    <h3 data-t="mediaHeading"></h3>
+    <div class="media" id="media"><div class="empty" data-t="searching"></div></div>
+  </section>
+  <section>
+    <label><input type="checkbox" id="intercept" /> <span data-t="intercept"></span></label>
+    <label><input type="checkbox" id="videoButton" /> <span data-t="videoButton"></span></label>
+    <div class="row"><span data-t="minSize"></span> <input type="number" id="minSize" min="0" step="1" /></div>
+    <div class="row"><span data-t="port"></span> <input type="number" id="port" min="1024" max="65535" /></div>
+  </section>
+  <footer data-t="footer"></footer>
+  <script src="sites.js"></script>
+  <script src="i18n.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

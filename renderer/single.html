@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; script-src 'self'" />
+  <title>Grabbit</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body { background: var(--surface); }
+    html.mica, html.mica body { background: transparent; }
+    html.mica .s-body { background: var(--layer); border-top: 1px solid var(--border); }
+    .single { display: flex; flex-direction: column; height: 100vh; }
+    /* Başlık alanı pencereyi sürükler; sağda gömülü pencere düğmelerine yer bırakılır */
+    .s-head { display: flex; align-items: center; gap: 14px; padding: 14px 150px 14px 20px; min-height: 76px; border-bottom: 1px solid var(--border); -webkit-app-region: drag; }
+    .s-head input, .s-head button { -webkit-app-region: no-drag; }
+    .s-head .file-badge { width: 44px; height: 44px; border-radius: 12px; }
+    .s-head .file-badge svg.i { width: 22px; height: 22px; }
+    .s-title { min-width: 0; flex: 1; }
+    .s-title .kicker { font-size: 11.5px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+    .s-title h1 { margin: 2px 0 0; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; }
+    .s-title input { width: 100%; font-weight: 600; font-size: 14px; margin-top: 4px; }
+    .s-body { flex: 1; padding: 14px 20px; overflow-y: auto; }
+    .s-foot { display: flex; align-items: center; gap: 8px; padding: 12px 20px 16px; border-top: 1px solid var(--border); background: var(--surface-2); }
+    .s-foot .grow { flex: 1; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-3); }
+    .kv { display: grid; grid-template-columns: 120px 1fr; gap: 6px 12px; font-size: 12.5px; margin: 0 0 14px; }
+    .kv dt { color: var(--text-3); }
+    .kv dd { margin: 0; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: text; font-variant-numeric: tabular-nums; }
+    .kv dd.wrap { white-space: normal; word-break: break-all; }
+    .big-bar { height: 12px; border-radius: 7px; background: var(--bar-bg); overflow: hidden; position: relative; margin: 4px 0 10px; }
+    .big-bar > i { position: absolute; inset: 0 auto 0 0; border-radius: 7px; background: linear-gradient(90deg, var(--accent), var(--accent-2)); transition: width .3s; }
+    .big-bar.done > i { background: var(--ok); }
+    .big-bar.err > i { background: var(--err); }
+    .big-bar.indeterminate > i { width: 30% !important; animation: indet 1.2s ease-in-out infinite; }
+    #sSeg { width: 100%; display: block; border-radius: 5px; }
+    .seg-cap { display: flex; justify-content: space-between; font-size: 11.5px; color: var(--text-3); margin-bottom: 6px; }
+    .done-hero { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 10px 0 4px; }
+    .done-hero .ok-icon { width: 56px; height: 56px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); display: flex; align-items: center; justify-content: center; }
+    .done-hero .ok-icon svg.i { width: 30px; height: 30px; stroke-width: 2.5; }
+    .done-hero.err .ok-icon { background: var(--err-soft); color: var(--err); }
+    .done-hero h2 { margin: 6px 0 0; font-size: 16px; }
+    .done-hero p { margin: 0; color: var(--text-2); }
+    .quality { display: flex; flex-wrap: wrap; gap: 6px; }
+    .quality label { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-strong); border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 12.5px; }
+    .quality label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); color: var(--accent-text); font-weight: 600; }
+    .quality input { display: none; }
+    .source { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-3); }
+    .loading-line { display: flex; align-items: center; gap: 10px; color: var(--text-3); padding: 18px 0; }
+    .with-thumb { display: grid; grid-template-columns: 168px 1fr; gap: 14px; align-items: start; }
+    .thumb { width: 168px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px; background: var(--surface-3); }
+    .with-thumb .kv { grid-template-columns: 70px 1fr; }
+    .spin { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border-strong); border-top-color: var(--accent); animation: spin .8s linear infinite; }
+  </style>
+</head>
+<body>
+  <div class="single">
+    <div class="s-head">
+      <span class="file-badge cat-other" id="sIcon"></span>
+      <div class="s-title">
+        <div class="kicker" id="sKicker"></div>
+        <h1 id="sName"></h1>
+        <input id="sNameInput" hidden spellcheck="false" title="Dosya adını değiştirebilirsiniz" />
+      </div>
+    </div>
+    <div class="s-body" id="sBody"></div>
+    <div class="s-foot" id="sFoot"></div>
+  </div>
+  <script src="../i18n/locales/en.js"></script>
+  <script src="../i18n/locales/tr.js"></script>
+  <script src="../i18n/locales/de.js"></script>
+  <script src="../i18n/locales/es.js"></script>
+  <script src="../i18n/locales/fr.js"></script>
+  <script src="../i18n/locales/ru.js"></script>
+  <script src="../i18n/i18n.js"></script>
+  <script src="i18n-dom.js"></script>
+  <script src="icons.js"></script>
+  <script src="format.js"></script>
+  <script src="single.js"></script>
+</body>
+</html>

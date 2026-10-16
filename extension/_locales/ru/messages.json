@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Мост Grabbit"
+  },
+  "extDescription": {
+    "message": "Передаёт загрузки браузера, видео и изображения в настольное приложение Grabbit."
+  }
+}

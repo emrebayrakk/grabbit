@@ -1,0 +1,8 @@
+{
+  "extName": {
+    "message": "Passerelle Grabbit"
+  },
+  "extDescription": {
+    "message": "Envoie les téléchargements du navigateur, les vidéos et les images à l’application de bureau Grabbit."
+  }
+}
