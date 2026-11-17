@@ -1,0 +1,20 @@
+[workspace]
+members = ["core", "src-tauri"]
+resolver = "2"
+
+[workspace.package]
+version = "3.0.0"
+edition = "2021"
+license = "MIT"
+authors = ["Emre Bayrak"]
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+opt-level = 3
+
+# Geliştirme derlemesi: hata ayıklama sembolleri olmadan (derleme klasörü birkaç kat küçük kalır)
+[profile.dev]
+debug = 0
+incremental = false

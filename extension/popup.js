@@ -3,17 +3,6 @@
 const DEFAULTS = { port: 17890, intercept: true, minSizeMb: 0, videoButton: true };
 const $ = (id) => document.getElementById(id);
 
-function fmtSize(n) {
-  if (!(n > 0)) return '';
-  const u = ['B', 'KB', 'MB', 'GB'];
-  let i = 0;
-  while (n >= 1024 && i < 3) {
-    n /= 1024;
-    i++;
-  }
-  return `${n.toFixed(n >= 100 || i === 0 ? 0 : 1)} ${u[i]}`;
-}
-
 async function refreshStatus() {
   const r = await chrome.runtime.sendMessage({ type: 'ping' });
   $('status').className = 'status ' + (r?.ok ? 'on' : 'off');
@@ -23,33 +12,26 @@ async function refreshStatus() {
 async function renderMedia() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const box = $('media');
-  const list = tab ? (await chrome.runtime.sendMessage({ type: 'getMedia', tabId: tab.id })) || [] : [];
-  // YouTube, Instagram vb.: sayfanın videosu video motoruyla indirilir
-  if (tab && tiIsMediaPage(tab.url)) {
-    list.unshift({ type: 'page', url: tab.url, size: -1 }, { type: 'page', url: tab.url, size: -1, quality: 'audio' });
-  }
-  if (!list?.length) {
+  const sniffed = tab ? (await chrome.runtime.sendMessage({ type: 'getMedia', tabId: tab.id })) || [] : [];
+  // YouTube, Instagram vb.: sayfanın videosu video motoruyla; diğer sitelerde reklam/önizleme ve tekrarlar elenir
+  const list = tab ? tiPickMedia(sniffed, { mediaPage: tiIsMediaPage(tab.url), pageUrl: tab.url, allStreams: true, limit: 5 }) : [];
+  if (!list.length) {
     box.innerHTML = '<div class="empty"></div>';
     box.firstChild.textContent = tiT('noMedia');
     return;
   }
   box.innerHTML = '';
+  const pageTitle = (tab.title || '').replace(/\s*[-|–]\s*[^-|–]*$/, '');
   for (const m of list) {
     const el = document.createElement('div');
     el.className = 'm';
-    let host = '';
-    try {
-      host = new URL(m.url).host;
-    } catch { /* yoksay */ }
-    const name = decodeURIComponent(m.url.split('?')[0].split('/').pop() || '');
-    const tag = m.type === 'page' ? (m.quality === 'audio' ? 'MP3' : tiT('siteTag')) : m.type === 'hls' ? m.quality || 'HLS' : m.type === 'audio' ? tiT('audioTag') : (name.split('.').pop() || 'VIDEO').toUpperCase().slice(0, 5);
-    const title = m.type === 'page' ? (m.quality === 'audio' ? tiT('mp3Title') : tiT('pageVideo')) : m.type === 'hls' ? (m.variants?.length ? tiT('hlsTitleQ', { n: m.variants.length }) : tiT('hlsTitle')) : name;
+    const d = tiDescribe(m, tiT, { pageTitle });
     el.innerHTML = '<span class="tag"></span><div class="info"><b></b><small></small></div><button class="dl"></button>';
     el.querySelector('button').textContent = tiT('download');
-    el.querySelector('.tag').textContent = tag;
-    el.querySelector('b').textContent = title;
+    el.querySelector('.tag').textContent = d.tag;
+    el.querySelector('b').textContent = d.title;
     el.querySelector('b').title = m.url;
-    el.querySelector('small').textContent = [fmtSize(m.size), host].filter(Boolean).join(' · ');
+    el.querySelector('small').textContent = d.sub;
     el.querySelector('button').onclick = async (e) => {
       e.target.textContent = '…';
       const r = await chrome.runtime.sendMessage({ type: 'download', item: m, tabId: tab.id });

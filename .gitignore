@@ -1,5 +1,7 @@
-node_modules/
+target/
 dist/
+src-tauri/gen/
+node_modules/
 *.tipart
 *.tipart.d/
 *.log

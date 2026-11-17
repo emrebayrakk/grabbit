@@ -23,6 +23,7 @@
 - **Tarayıcınızla çalışır:** Chrome, Edge, Brave, Opera ve Vivaldi. Tarayıcıdaki indirmeler otomatik yakalanır, videoların üzerinde **"Bu videoyu indir"** düğmesi çıkar.
 - **1000'den fazla siteden video:** YouTube (Shorts dahil), Instagram, TikTok, X/Twitter, Facebook, Twitch, Vimeo, Reddit ve daha fazlası; 4K'dan 360p'ye istediğiniz kalitede ya da **yalnızca ses (MP3)** olarak.
 - **Tam boyut görseller:** Küçük önizlemeler (`=s64`, `s64x64`, `name=small`…) yerine orijinal görsel iner.
+- **Hafif:** Rust ve [Tauri](https://tauri.app) ile yazıldı. Kurulum yaklaşık 4 MB; Grabbit tepsideyken yalnızca Rust motoru çalışır (yaklaşık 35 MB bellek), pencere yeniden açılana kadar bellekten tamamen çıkar.
 - **Gizliliğe saygılı:** Her şey bilgisayarınızda çalışır. Çerezler yalnızca ait oldukları siteye gönderilir, geçici çerez dosyaları hemen silinir.
 
 ## Ekran görüntüleri
@@ -34,7 +35,9 @@
 | <img src="docs/screenshots/progress-dark-tr.png" alt="İlerleme penceresi" width="420"> | <img src="docs/screenshots/add-dark-tr.png" alt="Yeni indirme penceresi" width="420"> |
 
 <details>
-<summary><b>Açık tema ve ayarlar</b></summary>
+<summary><b>Karşılama penceresi, açık tema ve ayarlar</b></summary>
+
+<img src="docs/screenshots/onboard-dark-tr.png" alt="Karşılama penceresi: video motoru ve tarayıcı eklentisi" width="800">
 
 <img src="docs/screenshots/main-light-en.png" alt="Açık tema" width="800">
 
@@ -44,11 +47,12 @@
 
 ## Kurulum
 
-1. [Son sürümden](https://github.com/emrebayrakk/grabbit/releases/latest) **`Grabbit-Setup-x.y.z.exe`** dosyasını indirip çalıştırın. Windows 10/11, 64 bit.
-2. *(İsteğe bağlı)* Tarayıcınızı eşleştirin: **Ayarlar → Tarayıcı ve pano** ekranında tarayıcınızın yanındaki **Eklentiyi kur** düğmesine tıklayın. Eklentiler sayfası açılır ve eklenti klasörünün yolu panoya kopyalanır. **Geliştirici modu**'nu açın, **Paketlenmemiş öğe yükle**'ye tıklayın, açılan pencerede `Ctrl+V` ile yapıştırıp **Klasör seç**'e basın. Tarayıcı listede **"Eşleşti ✓"** olarak görünür.
-3. *(İsteğe bağlı)* Video siteleri için Grabbit bir kereliğine video motorunu kurmak için onay ister: [yt-dlp](https://github.com/yt-dlp/yt-dlp) ve [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds). İkisi de resmi GitHub sürümlerinden indirilir ve SHA-256 ile doğrulanır. yt-dlp kendiliğinden güncel tutulur.
+1. [Son sürümden](https://github.com/emrebayrakk/grabbit/releases/latest) **`Grabbit_x.y.z_x64-setup.exe`** dosyasını indirip çalıştırın. Windows 10/11, 64 bit. Grabbit 2.x'ten geçiyorsanız eski sürüm kendiliğinden kaldırılır; indirme listeniz ve ayarlarınız korunur.
+2. İlk açılışta bir **karşılama penceresi** her şeyi hazırlar:
+   - **Video motoru:** [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) ve [Deno](https://github.com/denoland/deno) (YouTube'un istediği JavaScript ortamı) resmi GitHub sürümlerinden hemen inmeye başlar ve SHA-256 ile doğrulanır. yt-dlp kendiliğinden güncel tutulur.
+   - **Tarayıcı eklentisi:** Tarayıcınızın yanındaki **Eklentiyi kur** düğmesine tıklayın. Eklentiler sayfası açılır ve eklenti klasörünün yolu panoya kopyalanır: **Geliştirici modu**'nu açın, **Paketlenmemiş öğe yükle**'ye tıklayın, açılan pencerede `Ctrl+V` ile yapıştırıp **Klasör seç**'e basın. Tarayıcı listede **"Eşleşti ✓"** olarak görünür.
 
-> Chrome, uygulamaların eklentileri sessizce kurmasına izin vermez; bu yüzden 2. adımda bir kez elle tıklamak gerekir. Eklenti mağazalarda yayınlanınca bu adım tek tıka iner.
+> Chrome, uygulamaların eklentileri sessizce kurmasına izin vermez; bu yüzden eklenti için bir kez elle tıklamak gerekir. Eklenti mağazalarda yayınlanınca bu adım tek tıka iner. İki adım da daha sonra **Ayarlar → Tarayıcı ve pano**'da bulunur.
 
 ## Özellikler
 
@@ -92,6 +96,7 @@ Görsele sağ tıklayın → **"Görseli Grabbit ile indir"**. Grabbit, sayfanı
 Büyük sürüm önce sunucuya sorulur; yoksa asıl bağlantı indirilir. **Ayarlar → Genel**'den kapatılabilir.
 
 ### Tarayıcı entegrasyonu
+- **Akıllı "Bu videoyu indir" düğmesi:** Yalnızca imlecin altındaki videoya ait olanı sunar: videonun kendi dosyası ya da süresi ona uyan akış. Reklam ve önizleme klipleri, tekrarlanan listeler ve ayrı ses izleri elenir. Seçenekler rastgele dosya adlarıyla değil, sayfa başlığı, kalite ve süreyle adlandırılır (ör. *"Uzay Belgeseli · 1080p · 1:39:22"*). Tek anlamlı seçenek varsa menü açılmadan doğrudan iner.
 - Bağlantı tıklamalarını ve tarayıcının başlattığı indirmeleri yakalar; Grabbit kapalıysa indirmeyi tarayıcı yapar. Küçük dosyalar tarayıcıya bırakılabilir.
 - Sayfada bulunan video sayısını rozetle gösteren araç çubuğu simgesi.
 - Sağ tık: bağlantı, video, görsel, ses ya da seçili bağlantıları indirme; sayfadaki tüm dosya bağlantılarını veya görselleri gönderme.
@@ -122,15 +127,14 @@ Büyük sürüm önce sunucuya sorulur; yoksa asıl bağlantı indirilir. **Ayar
 
 ## Kaynaktan derleme
 
-```bash
-npm install
-npm start          # uygulamayı çalıştır
-npm test           # motor testleri + çeviri denetimi
-npm run dist       # dist/Grabbit-Setup-<sürüm>.exe üret
-npm run pack-extension   # mağazalar için dist/grabbit-extension-<sürüm>.zip üret
-```
+Gerekenler: [Rust](https://rustup.rs) (stable, MSVC) ve Tauri CLI (`cargo install tauri-cli --version "^2"`). Windows 10/11'de WebView2 zaten kuruludur.
 
-"electron.exe bulunamadı" hatası alırsanız bir kez `node node_modules/electron/install.js` çalıştırın.
+```bash
+cargo run -p grabbit                    # uygulamayı çalıştır
+cargo test                              # motor, köprü, çeviri ve video sitesi testleri
+cd src-tauri && cargo tauri build       # kurulum: target/release/bundle/nsis/Grabbit_<sürüm>_x64-setup.exe
+pwsh scripts/pack-extension.ps1         # mağazalar için dist/grabbit-extension-<sürüm>.zip
+```
 
 Veriler `%APPDATA%\Grabbit` klasöründe tutulur. Taşınabilir kullanım için `GRABBIT_DATA` ortam değişkeniyle başka bir klasör gösterilebilir.
 
@@ -138,23 +142,21 @@ Veriler `%APPDATA%\Grabbit` klasöründe tutulur. Taşınabilir kullanım için 
 <summary><b>Proje yapısı</b></summary>
 
 ```
-src/
-  main.js            Electron ana süreç: pencereler, tepsi, bildirimler, IPC, pano
-  preload.js         Arayüze açılan güvenli API (contextIsolation + sandbox)
-  bridge.js          Eklentinin bağlandığı yerel sunucu (yalnızca 127.0.0.1)
-  browsers.js        Kurulu tarayıcıları bulma, eklentiler sayfasını açma
-  engine/
-    download.js      Çok bağlantılı indirme: bölme, devam, yeniden deneme
-    hls.js           HLS akışları: kalite, AES-128, ayrı ses, birleştirme
-    media.js         Video siteleri (yt-dlp)
-    tools.js         yt-dlp / FFmpeg kurulumu ve güncellemesi (SHA-256 doğrulamalı)
-    fullsize.js      Tam boyut görsel kuralları
-    manager.js       Kuyruk, kalıcılık, ayarlar, zamanlayıcı
-    http.js          Yönlendirme (çerez korumalı) ve yoklama
-renderer/            Arayüz (düz HTML/CSS/JS, derleme adımı yok)
+core/                Rust kütüphanesi (arayüzden bağımsız, testli)
+  src/download.rs    Çok bağlantılı indirme: bölme, devam, yeniden deneme, takılma denetimi
+  src/hls.rs         HLS akışları: kalite, AES-128, ayrı ses, birleştirme
+  src/media.rs       Video siteleri (yt-dlp; YouTube için Deno)
+  src/tools.rs       yt-dlp / FFmpeg / Deno kurulumu ve güncellemesi (SHA-256 doğrulamalı)
+  src/manager.rs     Kuyruk, kalıcılık, ayarlar, zamanlayıcı, yoklama önbelleği
+  src/bridge.rs      Eklentinin bağlandığı yerel sunucu (yalnızca 127.0.0.1)
+  src/client.rs      Tarayıcıyı Windows TCP tablosundan tanıma
+  src/http.rs        Yönlendirme (çerez korumalı) ve yoklama
+  src/fullsize.rs    Tam boyut görsel kuralları
+  src/i18n.rs        Arayüzle aynı çeviri dosyalarını okur
+  tests/engine.rs    Yerel sunucuya karşı 41 motor senaryosu
+src-tauri/           Masaüstü uygulaması (Tauri 2): pencereler, tepsi, bildirimler, komutlar
+ui/                  Arayüz (düz HTML/CSS/JS, derleme adımı yok) + çeviriler (ui/i18n)
 extension/           Chromium eklentisi (Manifest V3)
-i18n/                Çeviriler (npm run check-i18n)
-test/                Yerel sunucuya karşı motor testleri (npm test)
 ```
 
 </details>
@@ -162,9 +164,9 @@ test/                Yerel sunucuya karşı motor testleri (npm test)
 <details>
 <summary><b>Eklentiyi mağazada yayınlama (tek tıkla kurulum)</b></summary>
 
-1. `npm run pack-extension` komutu `dist/grabbit-extension-<sürüm>.zip` dosyasını üretir.
+1. `pwsh scripts/pack-extension.ps1` komutu `dist/grabbit-extension-<sürüm>.zip` dosyasını üretir.
 2. Bu dosyayı [Chrome Web Mağazası geliştirici panosuna](https://chrome.google.com/webstore/devconsole) ve isterseniz ücretsiz [Edge Eklentileri iş ortağı merkezine](https://partner.microsoft.com/dashboard/microsoftedge) yükleyin. Eklenti çerez ve tüm sitelere erişim izni kullandığı için mağazalar bir gizlilik politikası ister.
-3. Mağazanın verdiği eklenti kimliklerini `src/extension-store.json` dosyasına yazın ve `npm run dist` ile yeniden derleyin.
+3. Mağazanın verdiği eklenti kimliklerini `core/extension-store.json` dosyasına yazın ve kurulumu yeniden derleyin.
 
 Bundan sonra düğme **"Tek tıkla kur"** olur: Grabbit kayıt defterine (HKCU, yönetici izni gerekmez) harici eklenti girdisi yazar ve mağaza sayfasını açar; kullanıcı yalnızca **Ekle**'ye basar.
 

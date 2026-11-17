@@ -1,0 +1,45 @@
+[package]
+name = "grabbit-core"
+description = "Grabbit download engine: multi-connection downloads, HLS, video sites, browser bridge"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+name = "grabbit_core"
+
+[dependencies]
+tokio = { version = "1", features = ["full"] }
+tokio-util = "0.7"
+reqwest = { version = "0.12", features = ["stream"] }
+futures-util = "0.3"
+bytes = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+json5 = "0.4"
+regex = "1"
+url = "2"
+percent-encoding = "2"
+sha2 = "0.10"
+sha1 = "0.10"
+md-5 = "0.10"
+hex = "0.4"
+aes = "0.8"
+cbc = { version = "0.1", features = ["alloc"] }
+uuid = { version = "1", features = ["v4"] }
+zip = { version = "2", default-features = false, features = ["deflate"] }
+axum = { version = "0.8", default-features = false, features = ["http1", "tokio", "json"] }
+indexmap = "2"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
+trash = "5"
+
+[target.'cfg(windows)'.dependencies]
+winreg = "0.55"
+windows-sys = { version = "0.59", features = [
+  "Win32_Foundation",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_Networking_WinSock",
+  "Win32_System_Threading",
+  "Win32_System_ProcessStatus",
+] }

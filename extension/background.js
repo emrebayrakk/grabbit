@@ -199,12 +199,12 @@ function partOfMaster(master, url) {
   return !!(master.variants?.some((v) => v.url === url) || master.related?.includes(url));
 }
 
-async function inspectHls(url) {
+async function inspectHls(url, nested = false) {
   try {
     const res = await fetch(url, { credentials: 'include', signal: AbortSignal.timeout(6000) });
     const text = await res.text();
     if (!text.startsWith('#EXTM3U')) return null;
-    if (text.includes('#EXT-X-STREAM-INF')) {
+    if (text.includes('#EXT-X-STREAM-INF') && !nested) {
       const variants = [];
       const lines = text.split(/\r?\n/);
       for (let i = 0; i < lines.length; i++) {
@@ -215,7 +215,16 @@ async function inspectHls(url) {
       }
       // Ayrı ses/altyazı listeleri tek başına video değildir: listede gösterilmesin (uygulama ana listeden alır)
       const related = [...text.matchAll(/^#EXT-X-MEDIA:.*?URI="([^"]+)"/gm)].map((m) => new URL(m[1], url).toString());
-      return { master: true, variants, related, best: Math.max(0, ...variants.map((v) => v.height)) };
+      const best = Math.max(0, ...variants.map((v) => v.height));
+      // Süre en iyi kalitenin listesinden: menüde gösterilir ve videoyla eşleştirmede kullanılır
+      let duration = 0;
+      let live = false;
+      const top = variants.find((v) => v.height === best) || variants[0];
+      if (top) {
+        const sub = await inspectHls(top.url, true);
+        if (sub && !sub.master) ({ duration, live } = sub);
+      }
+      return { master: true, variants, related, best, duration, live };
     }
     let duration = 0;
     for (const m of text.matchAll(/#EXTINF:([\d.]+)/g)) duration += parseFloat(m[1]);
@@ -246,8 +255,10 @@ chrome.webRequest.onHeadersReceived.addListener(
         info = await inspectHls(url);
         if (info && !info.master && info.live) return; // canlı yayın indirilemez
         if (info?.master) {
+          if (info.live) return; // canlı yayın indirilemez
           item.variants = info.variants;
           item.related = info.related;
+          item.duration = info.duration;
           item.quality = info.best ? `${info.best}p` : '';
         } else if (info) {
           item.duration = info.duration;
@@ -305,10 +316,12 @@ async function sendMedia(item, { pageUrl, title } = {}) {
   }
 }
 
-/** Sekmedeki en iyi video adayı: önce HLS ana liste, sonra en büyük dosya. */
+/** Sekmedeki en olası video: video düğmesiyle aynı seçim (reklam/önizleme ve tekrarlar elenir). */
 function bestMedia(list, preferType) {
-  const visible = list.filter((m) => !m.hidden && (!preferType || m.type === preferType || (preferType === 'video' && m.type === 'hls')));
-  return visible.sort((a, b) => (b.type === 'hls') - (a.type === 'hls') || (b.size || 0) - (a.size || 0))[0];
+  const picked = tiPickMedia(list, { allStreams: true, limit: 10 });
+  const ok = (m) => !preferType || m.type === preferType || (preferType === 'video' && m.type === 'hls');
+  // Birden çok akış varsa en uzun olan asıl videodur (reklamlar kısa sürer)
+  return picked.filter(ok).sort((a, b) => (b.duration || 0) - (a.duration || 0) || (b.size || 0) - (a.size || 0))[0];
 }
 
 // ------------------------------------------------------------ sağ tık menüleri

@@ -193,53 +193,10 @@
     return [...new Set(urls.filter((u) => /^https?:/i.test(u || '')))];
   }
 
-  function fmtSize(n) {
-    if (!(n > 0)) return '';
-    const u = ['B', 'KB', 'MB', 'GB'];
-    let i = 0;
-    while (n >= 1024 && i < 3) {
-      n /= 1024;
-      i++;
-    }
-    return `${n.toFixed(n >= 100 || i === 0 ? 0 : 1)} ${u[i]}`;
-  }
-
-  function fmtDur(s) {
-    if (!(s > 0)) return '';
-    s = Math.round(s);
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = String(s % 60).padStart(2, '0');
-    return h ? `${h}:${String(m).padStart(2, '0')}:${sec}` : `${m}:${sec}`;
-  }
-
   function describe(m) {
-    if (m.type === 'page' && m.quality === 'audio') {
-      return { tag: 'MP3', title: tiT('mp3Title'), sub: tiT('mp3Sub') };
-    }
-    if (m.type === 'page') {
-      return { tag: tiT('siteTag'), title: tiT('siteTitle'), sub: tiT('siteSub', { host: location.hostname.replace(/^www\./, '') }) };
-    }
-    const host = (() => {
-      try {
-        return new URL(m.url).host;
-      } catch {
-        return '';
-      }
-    })();
-    const name = decodeURIComponent((m.url.split('?')[0].split('/').pop() || '').slice(0, 80));
-    if (m.type === 'hls') {
-      return {
-        tag: m.quality || 'HLS',
-        title: m.variants?.length ? tiT('hlsTitleQ', { n: m.variants.length }) : tiT('hlsTitle'),
-        sub: [fmtDur(m.duration), host].filter(Boolean).join(' · ')
-      };
-    }
-    return {
-      tag: m.type === 'audio' ? tiT('audioTag') : (name.split('.').pop() || 'VIDEO').toUpperCase().slice(0, 5),
-      title: name || (m.type === 'audio' ? tiT('audioFile') : tiT('videoFile')),
-      sub: [fmtSize(m.size), host].filter(Boolean).join(' · ')
-    };
+    // Çerçevedeki oynatıcının başlığı çoğu zaman anlamsızdır; üst sayfada sekme başlığı kullanılır
+    const pageTitle = window === top ? document.title.replace(/\s*[-|–]\s*[^-|–]*$/, '') : '';
+    return tiDescribe(m, tiT, { pageTitle });
   }
 
   // Akış sayfalarında (X, Instagram, TikTok, Facebook…) imlecin altındaki gönderinin kalıcı adresi
@@ -267,22 +224,21 @@
   }
 
   async function candidates(video) {
-    const direct = directSources(video).map((url) => ({ url, type: 'video', size: -1, direct: true }));
+    const direct = directSources(video);
     let sniffed = [];
     try {
       sniffed = (await chrome.runtime.sendMessage({ type: 'getMedia' })) || [];
     } catch { /* eklenti yeniden yüklendiyse */ }
-    const all = [...direct];
-    for (const m of sniffed.sort((a, b) => (b.type === 'hls') - (a.type === 'hls') || (b.size || 0) - (a.size || 0))) {
-      if (!all.some((x) => x.url === m.url)) all.push(m);
-    }
-    // Video sitelerinde (YouTube vb.) asıl yol sayfa adresiyle video motoru; başka sitelerde
-    // hiçbir şey yakalanmadıysa son çare olarak yine onu dene.
-    const page = { url: pageVideoUrl(video), type: 'page', size: -1 };
-    if (tiIsMediaPage(location.href)) {
-      return [page, { ...page, quality: 'audio' }, ...all.filter((m) => m.type === 'hls' || m.direct)];
-    }
-    return all.length ? all : [page];
+    const own = direct.map((url) => ({ url, type: 'video', size: -1, direct: true }));
+    const list = tiPickMedia([...own, ...sniffed], {
+      direct,
+      duration: video.duration,
+      frameOrigin: location.origin,
+      mediaPage: tiIsMediaPage(location.href),
+      pageUrl: pageVideoUrl(video)
+    });
+    // Hiçbir şey yakalanmadıysa (video akış olarak oynuyor ama henüz istenmedi) motoru denemeyi öner
+    return list.length ? list : [{ url: pageVideoUrl(video), type: 'page', size: -1, fallback: true }];
   }
 
   async function download(item) {
@@ -325,9 +281,9 @@
     if (!video) return;
     const list = await candidates(video);
     if (!list.length) return message(tiT('noAddress'));
-    if (list.length === 1) return download(list[0]);
+    if (list.length === 1 && !list[0].fallback) return download(list[0]);
     menu.innerHTML = '<div class="t"></div>';
-    menu.firstChild.textContent = tiT('pickVideo');
+    menu.firstChild.textContent = list[0].fallback ? tiT('notCaptured') : tiT('pickVideo');
     for (const m of list) {
       const d = describe(m);
       const el = document.createElement('div');

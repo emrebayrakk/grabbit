@@ -23,6 +23,7 @@ Multi-connection downloads · Resume anything · Browser integration · Videos, 
 - **Works with your browser:** Chrome, Edge, Brave, Opera and Vivaldi. Browser downloads are captured automatically, and a **“Download this video”** button appears on videos.
 - **Videos from 1000+ sites:** YouTube (incl. Shorts), Instagram, TikTok, X/Twitter, Facebook, Twitch, Vimeo, Reddit and more, in any quality from 4K down to 360p, or **audio only as MP3**.
 - **Full-size images:** small previews (`=s64`, `s64x64`, `name=small`…) are swapped for the original image.
+- **Light:** written in Rust with [Tauri](https://tauri.app). The installer is about 4 MB, and while Grabbit waits in the tray only the Rust engine runs (about 35 MB of memory) — the window is fully unloaded until you open it again.
 - **Private by design:** everything runs locally. Cookies are passed only to the site they belong to and temporary cookie files are deleted right away.
 
 ## Screenshots
@@ -34,7 +35,9 @@ Multi-connection downloads · Resume anything · Browser integration · Videos, 
 | <img src="docs/screenshots/progress-light-en.png" alt="Progress window" width="420"> | <img src="docs/screenshots/add-light-en.png" alt="New download dialog" width="420"> |
 
 <details>
-<summary><b>Dark theme and settings</b></summary>
+<summary><b>Welcome window, dark theme and settings</b></summary>
+
+<img src="docs/screenshots/onboard-light-en.png" alt="Welcome window: video engine and browser extension" width="800">
 
 <img src="docs/screenshots/main-dark-tr.png" alt="Dark theme" width="800">
 
@@ -44,11 +47,12 @@ Multi-connection downloads · Resume anything · Browser integration · Videos, 
 
 ## Install
 
-1. Download **`Grabbit-Setup-x.y.z.exe`** from the [latest release](https://github.com/emrebayrakk/grabbit/releases/latest) and run it. Windows 10/11, 64-bit.
-2. *(Optional)* Connect your browser: open **Settings → Browser & clipboard** and click **Install extension** next to your browser. The extensions page opens and the extension folder path is copied to your clipboard. Turn on **Developer mode**, click **Load unpacked**, press `Ctrl+V` in the folder dialog and choose **Select folder**. The browser then shows as **“Connected ✓”**.
-3. *(Optional)* For video sites, Grabbit asks once to install its video engine — [yt-dlp](https://github.com/yt-dlp/yt-dlp) and [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds), downloaded from their official GitHub releases and verified with SHA-256. yt-dlp is kept up to date automatically.
+1. Download **`Grabbit_x.y.z_x64-setup.exe`** from the [latest release](https://github.com/emrebayrakk/grabbit/releases/latest) and run it. Windows 10/11, 64-bit. Upgrading from Grabbit 2.x removes the old version automatically and keeps your download list and settings.
+2. On first launch a **welcome window** sets everything up:
+   - **Video engine** — [yt-dlp](https://github.com/yt-dlp/yt-dlp), [FFmpeg](https://github.com/yt-dlp/FFmpeg-Builds) and [Deno](https://github.com/denoland/deno) (the JavaScript runtime YouTube needs) start downloading right away from their official GitHub releases, verified with SHA-256. yt-dlp is kept up to date automatically.
+   - **Browser extension** — click **Install extension** next to your browser. The extensions page opens and the extension folder path is copied to your clipboard: turn on **Developer mode**, click **Load unpacked**, press `Ctrl+V` in the folder dialog and choose **Select folder**. The browser then shows as **“Connected ✓”**.
 
-> Chrome doesn’t let apps install extensions silently, so step 2 needs one manual click. Once the extension is published in the stores, this becomes one-click.
+> Chrome doesn’t let apps install extensions silently, so the extension needs one manual click. Once it is published in the stores, this becomes one-click. Both steps are also available later in **Settings → Browser & clipboard**.
 
 ## Features
 
@@ -92,6 +96,7 @@ Right-click an image → **“Download image with Grabbit”**. Grabbit picks th
 The bigger version is checked with the server first; if it doesn’t exist, the original link is downloaded. You can turn this off in **Settings → General**.
 
 ### Browser integration
+- **A smart “Download this video” button:** Grabbit offers only what belongs to the video under your cursor — its own file, or the stream whose length matches it. Ad clips and previews, duplicate playlists and separate audio tracks are filtered out, and options are named after the page title with quality and duration (e.g. *“Space Documentary · 1080p · 1:39:22”*) instead of random file names. When there is only one sensible choice, it downloads right away with no menu.
 - Captures link clicks and downloads started by the browser; if Grabbit is closed, the browser downloads as usual. Small files can be left to the browser.
 - Toolbar icon with a badge showing how many videos were found on the page.
 - Right-click: download a link, video, image, audio or selected links; send all file links or all images on the page.
@@ -122,15 +127,14 @@ The bigger version is checked with the server first; if it doesn’t exist, the 
 
 ## Build from source
 
-```bash
-npm install
-npm start          # run the app
-npm test           # engine tests + translation check
-npm run dist       # build dist/Grabbit-Setup-<version>.exe
-npm run pack-extension   # build dist/grabbit-extension-<version>.zip for the stores
-```
+Requirements: [Rust](https://rustup.rs) (stable, MSVC) and the Tauri CLI (`cargo install tauri-cli --version "^2"`). Windows 10/11 already includes WebView2.
 
-If you get “electron.exe not found”, run `node node_modules/electron/install.js` once.
+```bash
+cargo run -p grabbit                    # run the app
+cargo test                              # engine, bridge, translation and video-site tests
+cd src-tauri && cargo tauri build       # installer: target/release/bundle/nsis/Grabbit_<version>_x64-setup.exe
+pwsh scripts/pack-extension.ps1         # dist/grabbit-extension-<version>.zip for the stores
+```
 
 Data lives in `%APPDATA%\Grabbit`. Set the `GRABBIT_DATA` environment variable to use another folder (portable use).
 
@@ -138,23 +142,21 @@ Data lives in `%APPDATA%\Grabbit`. Set the `GRABBIT_DATA` environment variable t
 <summary><b>Project structure</b></summary>
 
 ```
-src/
-  main.js            Electron main process: windows, tray, notifications, IPC, clipboard
-  preload.js         Safe API exposed to the UI (contextIsolation + sandbox)
-  bridge.js          Local server the extension talks to (127.0.0.1 only)
-  browsers.js        Finds installed browsers, opens the extensions page
-  engine/
-    download.js      Multi-connection download: splitting, resume, retries
-    hls.js           HLS streams: quality, AES-128, separate audio, merging
-    media.js         Video sites via yt-dlp
-    tools.js         Installs and updates yt-dlp / FFmpeg (SHA-256 verified)
-    fullsize.js      Full-size image rules
-    manager.js       Queue, persistence, settings, scheduler
-    http.js          Redirects (cookie-safe) and probing
-renderer/            UI (plain HTML/CSS/JS, no build step)
+core/                Rust library (no UI), fully tested
+  src/download.rs    Multi-connection download: splitting, resume, retries, stall detection
+  src/hls.rs         HLS streams: quality, AES-128, separate audio, merging
+  src/media.rs       Video sites via yt-dlp (+ Deno for YouTube)
+  src/tools.rs       Installs and updates yt-dlp / FFmpeg / Deno (SHA-256 verified)
+  src/manager.rs     Queue, persistence, settings, scheduler, probe cache
+  src/bridge.rs      Local server the extension talks to (127.0.0.1 only)
+  src/client.rs      Identifies the browser from the Windows TCP table
+  src/http.rs        Redirects (cookie-safe) and probing
+  src/fullsize.rs    Full-size image rules
+  src/i18n.rs        Reads the same translation files as the UI
+  tests/engine.rs    41 end-to-end engine scenarios against a local server
+src-tauri/           Desktop app (Tauri 2): windows, tray, notifications, commands
+ui/                  UI (plain HTML/CSS/JS, no build step) + translations (ui/i18n)
 extension/           Chromium extension (Manifest V3)
-i18n/                Translations (npm run check-i18n)
-test/                Engine tests against a local server (npm test)
 ```
 
 </details>
@@ -162,9 +164,9 @@ test/                Engine tests against a local server (npm test)
 <details>
 <summary><b>Publishing the extension (one-click install)</b></summary>
 
-1. `npm run pack-extension` creates `dist/grabbit-extension-<version>.zip`.
+1. `pwsh scripts/pack-extension.ps1` creates `dist/grabbit-extension-<version>.zip`.
 2. Upload it to the [Chrome Web Store developer console](https://chrome.google.com/webstore/devconsole) and, optionally, the free [Edge Add-ons partner center](https://partner.microsoft.com/dashboard/microsoftedge). The stores ask for a privacy policy because the extension uses cookies and access to all sites.
-3. Put the store extension IDs into `src/extension-store.json` and rebuild with `npm run dist`.
+3. Put the store extension IDs into `core/extension-store.json` and rebuild the installer.
 
 The button then becomes **“One-click install”**: Grabbit writes an external-extension entry (HKCU, no admin needed) and opens the store page, so the user only clicks **Add**.
 
